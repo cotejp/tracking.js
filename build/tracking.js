@@ -62,14 +62,22 @@
    * @param {object} opt_options Optional configuration to the tracker.
    */
   tracking.initUserMedia_ = function(element, opt_options) {
-    window.navigator.mediaDevices.getUserMedia({
+
+    var constraints = {
       video: true,
       audio: (opt_options && opt_options.audio) ? true : false,
-    }).then(function(stream) {
+    };
+
+    if (opt_options && opt_options.mediaConstraints) {
+      constraints = opt_options.mediaConstraints;
+    }
+
+    window.navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
       element.srcObject = stream;
     }).catch(function(err) {
       throw Error('Cannot capture user camera.');
     });
+
   };
 
   /**
@@ -236,6 +244,8 @@
     var width;
     var height;
 
+
+// FIXME here the video display size of the analysed size
     var resizeCanvas_ = function() {
       width = element.offsetWidth;
       height = element.offsetHeight;
@@ -245,6 +255,11 @@
     resizeCanvas_();
     element.addEventListener('resize', resizeCanvas_);
 
+
+// FIXME: do a process function - it is up to the caller to handle the frequency of detection
+// it seems all handled in the tracking.TrackerTask..
+// so in short, remove the tracking.TrackerTask from here
+// if the user want to use it, it can create it himself
     var requestId;
     var requestAnimationFrame_ = function() {
       requestId = window.requestAnimationFrame(function() {
@@ -2939,7 +2954,7 @@
         tracking.LBF.maxNumStages
       );
     }
-
+// NOTE: is this thesholding suitable ? if it is on image, why no skin-color filter ? and a adaptative threshold
     pixels = tracking.Image.grayscale(pixels, width, height, false);
 
     pixels = tracking.Image.equalizeHist(pixels, width, height);
